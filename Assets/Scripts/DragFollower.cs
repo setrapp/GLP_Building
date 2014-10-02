@@ -2,33 +2,48 @@
 using System.Collections;
 
 public class DragFollower : MouseDirectee {
-	public float moveSpeed;
 	public GameObject flagPrefab;
 	private GameObject flag;
 	private bool moveToFlag = false;
+	private bool destinationSet = false;
+	public NavMeshAgent navigator = null;
+
+	void Awake()
+	{
+		base.Awake();
+		
+		if (navigator == null)
+		{
+			navigator = GetComponent<NavMeshAgent>();
+		}
+	}
 
 	void Update()
 	{
 		if (moveToFlag && flag != null)
 		{
-			Vector3 movement = (flag.transform.position - transform.position);
-			float moveDist = movement.magnitude;
-			if (moveDist > moveSpeed * Time.deltaTime)
+			if (!destinationSet && navigator != null)
 			{
-				movement = (movement / moveDist) * moveSpeed;
+				navigator.SetDestination(flag.transform.position);
+				destinationSet = true;
 			}
-			else
+
+			if ((flag.transform.position - transform.position).sqrMagnitude <= Mathf.Pow(navigator.stoppingDistance, 2))
 			{
 				Destroy(flag);
 				flag = null;
 			}
-			transform.position += movement * Time.deltaTime;
+		}
+		else
+		{
+			navigator.Stop();
 		}
 	}
 
 	protected virtual void FlagLetGo()
 	{
 		moveToFlag = true;
+		destinationSet = false;
 		MouseDirectee flagDirectee = flag.GetComponent<MouseDirectee>();
 		if (flagDirectee != null)
 		{
