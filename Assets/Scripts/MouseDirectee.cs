@@ -5,7 +5,7 @@ public class MouseDirectee : MonoBehaviour {
 	public Color highlightColor = Color.yellow;
 	private Color defaultColor;
 
-	protected virtual void Start()
+	protected virtual void Awake()
 	{
 		defaultColor = renderer.material.color;
 	}
@@ -29,13 +29,15 @@ public class MouseDirectee : MonoBehaviour {
 		LetGo();
 	}
 
+	protected virtual void MouseHold()
+	{
+		transform.position = MousePointer.Instance.MouseHit;
+	}
+
 	protected virtual void LetGo()
 	{
 		renderer.material.color = defaultColor;
 	}
 
-	protected virtual void MouseHold()
-	{
-		transform.position = MousePointer.Instance.MouseHit;
-	}
+	
 }

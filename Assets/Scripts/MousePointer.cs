@@ -35,17 +35,10 @@ public class MousePointer : MonoBehaviour {
 		int targetLayer = 0;
 		if (targetPressed != null)
 		{
-			if (targetPressed.layer == LayerMask.NameToLayer("Ignore Raycast"))
+			targetLayer = targetPressed.layer;
+			if (!Input.GetMouseButtonUp(0))
 			{
-				targetPressed = null;
-			}
-			else
-			{
-				targetLayer = targetPressed.layer;
-				if (!Input.GetMouseButtonUp(0))
-				{
-					targetPressed.layer = LayerMask.NameToLayer("Ignore Raycast");
-				}
+				targetPressed.layer = LayerMask.NameToLayer("Ignore Raycast");
 			}
 		}
 
@@ -111,5 +104,31 @@ public class MousePointer : MonoBehaviour {
 			}
 			targetPressed = null;
 		}
+	}
+
+	public void TargetObject(GameObject newTarget, bool mouseDownSendable = true, bool mouseOverSendable = true)
+	{
+		// Notifiy current target that is no longer the target.
+		if (mouseTarget != null)
+		{
+			mouseTarget.BroadcastMessage("MouseOut", SendMessageOptions.DontRequireReceiver);
+			mouseTarget.BroadcastMessage("MouseUp", SendMessageOptions.DontRequireReceiver);
+		}
+
+		// Set new target and notify
+		mouseTarget = newTarget;
+		if (mouseOverSendable)
+		{
+			mouseTarget.BroadcastMessage("MouseOver", SendMessageOptions.DontRequireReceiver);
+		}
+		if (mouseOverSendable)
+		{
+			mouseTarget.BroadcastMessage("MouseDown", SendMessageOptions.DontRequireReceiver);
+		}
+
+		if (Input.GetMouseButton(0))
+		{
+			targetPressed = mouseTarget;
+		} 
 	}
 }

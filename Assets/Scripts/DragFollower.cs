@@ -6,13 +6,6 @@ public class DragFollower : MouseDirectee {
 	public GameObject flagPrefab;
 	private GameObject flag;
 	private bool moveToFlag = false;
-	private int defaultLayer;
-
-	void Start()
-	{
-		base.Start();
-		defaultLayer = gameObject.layer;
-	}
 
 	void Update()
 	{
@@ -33,27 +26,35 @@ public class DragFollower : MouseDirectee {
 		}
 	}
 
-	protected override void MouseDown()
+	protected virtual void FlagLetGo()
 	{
-		if (flag != null)
-		{
-			Destroy(flag);
-			flag = null;
-		}
-		flag = (GameObject)Instantiate(flagPrefab, MousePointer.Instance.MouseHit, Quaternion.identity);
-		gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
-	}
-
-	protected override void MouseUp()
-	{
-		// TODO need to not use this callback and get flag to drag rather than this. Ignore Raycast works at first.
-
 		moveToFlag = true;
 		MouseDirectee flagDirectee = flag.GetComponent<MouseDirectee>();
 		if (flagDirectee != null)
 		{
 			flagDirectee.enabled = false;
 		}
-		gameObject.layer = defaultLayer;
+	}
+
+	protected override void MouseDown()
+	{
+		// Destory old flag.
+		if (flag != null)
+		{
+			Destroy(flag);
+			flag = null;
+		}
+
+		// Create new flag to seek.
+		flag = (GameObject)Instantiate(flagPrefab, MousePointer.Instance.MouseHit, Quaternion.identity);
+		DragFlag flagDragFlag = flag.GetComponent<DragFlag>();
+		if (flagDragFlag != null)
+		{
+			flagDragFlag.follower = gameObject;
+		}
+
+		// Tell mouse pointer to target the flag instead of this.
+		MousePointer.Instance.TargetObject(flag);
+		moveToFlag = false;
 	}
 }
