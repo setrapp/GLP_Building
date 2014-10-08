@@ -11,7 +11,6 @@ public class PlaceableBlock : MonoBehaviour {
 	public bool carried;
 	public BlockType blockType;
 	public BlockCarrier carrier;
-	public PlaceableBlock attachedBlock;
 
 	public enum BlockType
 	{
@@ -50,7 +49,26 @@ public class PlaceableBlock : MonoBehaviour {
 				nearSpot.UsePath();
 			}
 		}
-		
+	}
+
+	private void OnMouseUp()
+	{
+		Drop();
+	}
+
+	public void Drop()
+	{
+		if (carrier != null)
+		{
+			BlockCarrier carrierBlock = carrier.GetComponent<BlockCarrier>();
+			if (carrierBlock != null)
+			{
+				carrierBlock.carriedBlock = null;
+			}
+		}
+
+		carrier = null;
+		transform.parent = null;
 	}
 
 	private void UsePath()
@@ -106,7 +124,8 @@ public class PlaceableBlock : MonoBehaviour {
 		rime.transform.parent = onset.transform;
 		rime.transform.localRotation = Quaternion.identity;
 		rime.transform.localPosition = new Vector3(0, 0, 1);
-		rime.carrier = null;
-		onset.attachedBlock = rime;
+		BlockCarrier onsetCarrier = onset.GetComponent<BlockCarrier>();
+		rime.carrier = onsetCarrier;
+		onsetCarrier.carriedBlock = rime;
 	}
 }
