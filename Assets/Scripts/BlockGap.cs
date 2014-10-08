@@ -2,11 +2,12 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class PlaceableBlock : MonoBehaviour {
-	public bool isStatic = false;
+public class BlockGap : MonoBehaviour {
+	// TODO Separate gap code into hear and figure out dropping.
+
+	/*public bool isStatic = false;
 	public bool isVisible = false;
 	public GameObject attachedWall;
-	public List<PlaceableBlock> placeableSpots;
 	public float placeRange;
 	public bool carried;
 	public BlockType blockType;
@@ -108,5 +109,5 @@ public class PlaceableBlock : MonoBehaviour {
 		rime.transform.localPosition = new Vector3(0, 0, 1);
 		rime.carrier = null;
 		onset.attachedBlock = rime;
-	}
+	}*/
 }
