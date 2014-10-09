@@ -11,6 +11,11 @@ public class PlaceableBlock : MonoBehaviour {
 	public bool carried;
 	public BlockType blockType;
 	public BlockCarrier carrier;
+	public float fallAcceleration;
+	private float fallSpeed;
+	public float maxFallSpeed;
+	private bool falling = false;
+	public string groundLayer = "Ground";
 
 	public enum BlockType
 	{
@@ -49,6 +54,12 @@ public class PlaceableBlock : MonoBehaviour {
 				nearSpot.UsePath();
 			}
 		}
+
+		if (!isStatic && falling)
+		{
+			fallSpeed = Mathf.Max(fallSpeed + fallAcceleration * Time.deltaTime, maxFallSpeed);
+			transform.position -= new Vector3(0, fallSpeed * Time.deltaTime, 0);
+		}
 	}
 
 	private void OnMouseUp()
@@ -69,6 +80,7 @@ public class PlaceableBlock : MonoBehaviour {
 
 		carrier = null;
 		transform.parent = null;
+		falling = true;
 	}
 
 	private void UsePath()
@@ -90,6 +102,7 @@ public class PlaceableBlock : MonoBehaviour {
 				carried = true;
 				transform.parent = collision.collider.gameObject.transform;
 				transform.localRotation = Quaternion.identity;
+				transform.localPosition += potentialCarrier.carryOffset;
 				potentialCarrier.carriedBlock = this;
 				carrier = potentialCarrier;
 			}
@@ -108,6 +121,13 @@ public class PlaceableBlock : MonoBehaviour {
 					}
 				}
 			}
+		}
+
+		if (falling && collision.collider.gameObject.layer == LayerMask.NameToLayer(groundLayer))
+		{
+			falling = false;
+			float penetration = Mathf.Abs(transform.localScale.y - (transform.position.y - collision.collider.transform.position.y));
+			transform.position += new Vector3(0, penetration, 0);
 		}
 	}
 
