@@ -5,6 +5,12 @@ using System.Collections.Generic;
 public class BlockGap : MonoBehaviour {
 	// TODO Separate gap code into hear and figure out dropping.
 
+	public float blockSize;
+	public bool filled;
+	public GameObject attachedWall;
+	public BlockGap attachedGap;
+
+
 	/*public bool isStatic = false;
 	public bool isVisible = false;
 	public GameObject attachedWall;
