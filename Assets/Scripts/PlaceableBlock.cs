@@ -10,12 +10,14 @@ public class PlaceableBlock : MonoBehaviour {
 	public float placeRange;
 	public bool carried;
 	public BlockType blockType;
-	public BlockCarrier carrier;
+	public BlockCarrier blockCarrier;
+	public BlockCarrier carriedBy;
 	public float fallAcceleration;
 	private float fallSpeed;
 	public float maxFallSpeed;
 	private bool falling = false;
 	public string groundLayer = "Ground";
+	public string gapLayer = "Block Gap";
 
 	public enum BlockType
 	{
@@ -69,16 +71,16 @@ public class PlaceableBlock : MonoBehaviour {
 
 	public void Drop()
 	{
-		if (carrier != null)
+		if (carriedBy != null)
 		{
-			BlockCarrier carrierBlock = carrier.GetComponent<BlockCarrier>();
+			BlockCarrier carrierBlock = carriedBy.GetComponent<BlockCarrier>();
 			if (carrierBlock != null)
 			{
 				carrierBlock.carriedBlock = null;
 			}
 		}
 
-		carrier = null;
+		carriedBy = null;
 		transform.parent = null;
 		falling = true;
 	}
@@ -97,14 +99,14 @@ public class PlaceableBlock : MonoBehaviour {
 		if (!isStatic)
 		{
 			BlockCarrier potentialCarrier = collision.collider.GetComponent<BlockCarrier>();
-			if (carrier == null && potentialCarrier != null && potentialCarrier.carriedBlock == null)
+			if (carriedBy == null && potentialCarrier != null && potentialCarrier.carriedBlock == null)
 			{
 				carried = true;
 				transform.parent = collision.collider.gameObject.transform;
 				transform.localRotation = Quaternion.identity;
 				transform.localPosition += potentialCarrier.carryOffset;
 				potentialCarrier.carriedBlock = this;
-				carrier = potentialCarrier;
+				carriedBy = potentialCarrier;
 			}
 			else
 			{
@@ -123,29 +125,71 @@ public class PlaceableBlock : MonoBehaviour {
 			}
 		}
 
-		if (falling && collision.collider.gameObject.layer == LayerMask.NameToLayer(groundLayer))
+		if (falling)
 		{
-			falling = false;
-			float penetration = Mathf.Abs(transform.localScale.y - (transform.position.y - collision.collider.transform.position.y));
-			transform.position += new Vector3(0, penetration, 0);
+			if (collision.collider.gameObject.layer == LayerMask.NameToLayer(groundLayer))
+			{
+				falling = false;
+				float penetration = Mathf.Abs(transform.localScale.y - (transform.position.y - collision.collider.transform.position.y));
+				transform.position += new Vector3(0, penetration, 0);
+			}
+			else if (collision.collider.gameObject.layer == LayerMask.NameToLayer(gapLayer))
+			{
+				BlockGap blockGap = collision.collider.GetComponent<BlockGap>();
+				if (blockGap != null && CanFillGap(blockGap))
+				{
+					FillGap(blockGap);
+				}
+			}
+		}
+	}
+
+	public bool CanFillGap(BlockGap gap)
+	{
+		if (gap == null || gap.attachedGap == null)
+		{
+			return true;
+		}
+		else if (blockCarrier.carriedBlock == null)
+		{
+			return false;
+		}
+		return blockCarrier.carriedBlock.CanFillGap(gap.attachedGap);
+	}
+
+	public void FillGap(BlockGap gap)
+	{
+		falling = false;
+		transform.position = gap.transform.position;
+		transform.rotation = gap.transform.rotation;
+
+		gap.filled = true;
+		if (gap.attachedWall != null)
+		{
+			gap.attachedWall.SetActive(false);
+		}
+
+		if (blockCarrier.carriedBlock != null && gap.attachedGap != null)
+		{
+			blockCarrier.carriedBlock.FillGap(gap.attachedGap);
 		}
 	}
 
 	private void ConnectOnsetRime(PlaceableBlock onset, PlaceableBlock rime)
 	{
-		if (rime.carrier != null && onset.carrier == null)
+		if (rime.carriedBy != null && onset.carriedBy == null)
 		{
 			onset.transform.parent = rime.transform.parent;
 			onset.transform.localPosition = rime.transform.localPosition;
 			onset.transform.localRotation = rime.transform.localRotation;
-			onset.carrier = rime.carrier;
-			onset.carrier.carriedBlock = onset;
+			onset.carriedBy = rime.carriedBy;
+			onset.carriedBy.carriedBlock = onset;
 		}
 		rime.transform.parent = onset.transform;
 		rime.transform.localRotation = Quaternion.identity;
 		rime.transform.localPosition = new Vector3(0, 0, 1);
 		BlockCarrier onsetCarrier = onset.GetComponent<BlockCarrier>();
-		rime.carrier = onsetCarrier;
+		rime.carriedBy = onsetCarrier;
 		onsetCarrier.carriedBlock = rime;
 	}
 }
