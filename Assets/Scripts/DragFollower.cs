@@ -66,6 +66,7 @@ public class DragFollower : MouseDirectee {
 		if (flagDragFlag != null)
 		{
 			flagDragFlag.follower = gameObject;
+			
 		}
 
 		// Tell mouse pointer to target the flag instead of this.
