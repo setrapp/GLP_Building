@@ -22,7 +22,7 @@ public class DragFollower : MouseDirectee {
 	{
 		if (moveToFlag && flag != null)
 		{
-			if (!destinationSet && navigator != null)
+			if (!destinationSet && navigator != null && navigator.enabled)
 			{
 				navigator.SetDestination(flag.transform.position);
 				destinationSet = true;
@@ -34,7 +34,7 @@ public class DragFollower : MouseDirectee {
 				flag = null;
 			}
 		}
-		else
+		else if (navigator.enabled)
 		{
 			navigator.Stop();
 		}
