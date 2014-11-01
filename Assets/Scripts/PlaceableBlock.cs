@@ -125,6 +125,16 @@ public class PlaceableBlock : MonoBehaviour {
 			}
 		}
 
+		CheckFallCollsion(collision);
+	}
+
+	private void OnCollisionStay(Collision collision)
+	{
+		CheckFallCollsion(collision);
+	}
+
+	private void CheckFallCollsion(Collision collision)
+	{
 		if (falling)
 		{
 			if (collision.collider.gameObject.layer == LayerMask.NameToLayer(groundLayer))
@@ -138,6 +148,7 @@ public class PlaceableBlock : MonoBehaviour {
 				BlockGap blockGap = collision.collider.GetComponent<BlockGap>();
 				if (blockGap != null && CanFillGap(blockGap))
 				{
+					Debug.Log(collision.collider.transform.name);
 					FillGap(blockGap);
 				}
 			}
@@ -146,6 +157,7 @@ public class PlaceableBlock : MonoBehaviour {
 
 	public bool CanFillGap(BlockGap gap)
 	{
+		Debug.Log(gap + " " + gap.attachedGap);
 		if (gap == null || gap.attachedGap == null)
 		{
 			return true;
