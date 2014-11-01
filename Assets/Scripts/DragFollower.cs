@@ -3,10 +3,13 @@ using System.Collections;
 
 public class DragFollower : MouseDirectee {
 	public GameObject flagPrefab;
-	private GameObject flag;
-	private bool moveToFlag = false;
+	[HideInInspector]
+	public GameObject flag;
+	public bool moveToFlag = false;
 	private bool destinationSet = false;
 	public NavMeshAgent navigator = null;
+	private bool seekSpecialTarget = false;
+	private Vector3 specialTarget;
 
 	void Awake()
 	{
@@ -30,8 +33,20 @@ public class DragFollower : MouseDirectee {
 
 			if ((flag.transform.position - transform.position).sqrMagnitude <= Mathf.Pow(navigator.stoppingDistance, 2))
 			{
-				Destroy(flag);
-				flag = null;
+				if (seekSpecialTarget)
+				{
+					flag.transform.position = specialTarget;
+					seekSpecialTarget = false;
+					transform.LookAt(specialTarget, Vector3.up);
+					navigator.velocity = new Vector3();
+					destinationSet = false;
+				}
+				else
+				{
+					Destroy(flag);
+					flag = null;
+					moveToFlag = false;
+				}
 			}
 		}
 		else if (navigator.enabled)
@@ -72,5 +87,12 @@ public class DragFollower : MouseDirectee {
 		// Tell mouse pointer to target the flag instead of this.
 		MousePointer.Instance.TargetObject(flag);
 		moveToFlag = false;
+		seekSpecialTarget = false;
+	}
+
+	public void AddSpecialTarget(Vector3 target)
+	{
+		specialTarget = target;
+		seekSpecialTarget = true;
 	}
 }
