@@ -28,7 +28,7 @@ public class PlaceableBlock : MonoBehaviour {
 
 	void Update()
 	{
-		renderer.enabled = isVisible;
+		GetComponent<Renderer>().enabled = isVisible;
 
 		if (!isStatic)
 		{

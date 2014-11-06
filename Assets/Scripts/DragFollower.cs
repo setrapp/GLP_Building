@@ -51,7 +51,7 @@ public class DragFollower : MouseDirectee {
 		}
 		else if (navigator.enabled)
 		{
-			navigator.Stop();
+			//navigator.Stop();
 		}
 	}
 
