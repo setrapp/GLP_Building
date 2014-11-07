@@ -33,6 +33,7 @@ public class DragFollower : MouseDirectee {
 
 			if ((flag.transform.position - transform.position).sqrMagnitude <= Mathf.Pow(navigator.stoppingDistance, 2))
 			{
+                transform.position = new Vector3(flag.transform.position.x, transform.position.y, flag.transform.position.z);
 				if (seekSpecialTarget)
 				{
 					flag.transform.position = specialTarget;
@@ -40,12 +41,14 @@ public class DragFollower : MouseDirectee {
 					transform.LookAt(specialTarget, Vector3.up);
 					navigator.velocity = new Vector3();
 					destinationSet = false;
+					ToggleObstacleAvoidance(false);
 				}
 				else
 				{
 					Destroy(flag);
 					flag = null;
 					moveToFlag = false;
+					ToggleObstacleAvoidance(true);
 				}
 			}
 		}
@@ -64,6 +67,7 @@ public class DragFollower : MouseDirectee {
 		{
 			flagDirectee.enabled = false;
 		}
+		ToggleObstacleAvoidance(true);
 	}
 
 	protected override void MouseDown()
@@ -95,4 +99,19 @@ public class DragFollower : MouseDirectee {
 		specialTarget = target;
 		seekSpecialTarget = true;
 	}
+
+    private void ToggleObstacleAvoidance(bool avoid)
+    {
+		if (navigator.enabled)
+		{
+			if (avoid)
+			{
+				navigator.obstacleAvoidanceType = ObstacleAvoidanceType.HighQualityObstacleAvoidance;
+			}
+			else
+			{
+				navigator.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
+			}
+		}
+    }
 }
