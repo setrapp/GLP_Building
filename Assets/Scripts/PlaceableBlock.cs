@@ -8,7 +8,6 @@ public class PlaceableBlock : MonoBehaviour {
 	public GameObject attachedWall;
 	public List<PlaceableBlock> placeableSpots;
 	public float placeRange;
-	public bool carried;
 	public BlockType blockType;
 	public BlockCarrier blockCarrier;
 	public BlockCarrier carriedBy;
@@ -18,6 +17,7 @@ public class PlaceableBlock : MonoBehaviour {
 	private bool falling = false;
 	public string groundLayer = "Ground";
 	public string gapLayer = "Block Gap";
+	private FixedJoint joint;
 
 	public enum BlockType
 	{
@@ -52,6 +52,8 @@ public class PlaceableBlock : MonoBehaviour {
 		rigidbody.useGravity = true;
 		rigidbody.velocity = rigidbody.angularVelocity = new Vector3();
 		falling = true;
+		Destroy(joint);
+		joint = null;
 	}
 
 	private void UsePath()
@@ -70,12 +72,17 @@ public class PlaceableBlock : MonoBehaviour {
 			BlockCarrier potentialCarrier = collision.collider.GetComponent<BlockCarrier>();
 			if (carriedBy == null && potentialCarrier != null && potentialCarrier.carriedBlock == null)
 			{
-				carried = true;
 				transform.parent = collision.collider.gameObject.transform;
 				transform.localRotation = Quaternion.identity;
-				transform.localPosition += potentialCarrier.carryOffset;
+				transform.localPosition = potentialCarrier.carryOffset + blockCarrier.carryOffset;
 				potentialCarrier.carriedBlock = this;
 				carriedBy = potentialCarrier;
+				if (joint == null)
+				{
+					joint = gameObject.AddComponent<FixedJoint>();
+				}
+				joint.connectedBody = potentialCarrier.rigidbody;
+				
 			}
 			else
 			{
