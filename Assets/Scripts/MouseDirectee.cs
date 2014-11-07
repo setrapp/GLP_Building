@@ -11,7 +11,7 @@ public class MouseDirectee : MonoBehaviour {
 	{
 		if (colorChangeable)
 		{
-			defaultColor = GetComponent<Renderer>().material.color;
+			defaultColor = renderer.material.color;
 		}
 	}
 
@@ -19,7 +19,7 @@ public class MouseDirectee : MonoBehaviour {
 	{
 		if (colorChangeable)
 		{
-			GetComponent<Renderer>().material.color = highlightColor;
+			renderer.material.color = highlightColor;
 		}
 	}
 
@@ -49,7 +49,7 @@ public class MouseDirectee : MonoBehaviour {
 	{
 		if (colorChangeable)
 		{
-			GetComponent<Renderer>().material.color = defaultColor;
+			renderer.material.color = defaultColor;
 		}
 	}
 

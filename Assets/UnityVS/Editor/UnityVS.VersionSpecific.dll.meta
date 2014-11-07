@@ -1,17 +1,7 @@
 fileFormatVersion: 2
-guid: 0c7c2914c433dbf4abb82e5fe96751f7
-PluginImporter:
+guid: def10e51f852b214ca6c04165ae6e95a
+MonoAssemblyImporter:
   serializedVersion: 1
   iconMap: {}
   executionOrder: {}
-  isPreloaded: 0
-  platformData:
-    Any:
-      enabled: 0
-      settings: {}
-    Editor:
-      enabled: 1
-      settings:
-        DefaultValueInitialized: true
   userData: 
-  assetBundleName: 
