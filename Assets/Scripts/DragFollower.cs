@@ -31,9 +31,15 @@ public class DragFollower : MouseDirectee {
 				destinationSet = true;
 			}
 
-			if ((flag.transform.position - transform.position).sqrMagnitude <= Mathf.Pow(navigator.stoppingDistance, 2))
+			Vector3 toFlag = flag.transform.position - transform.position;
+			if (toFlag.y < navigator.height / 2)
 			{
-                transform.position = new Vector3(flag.transform.position.x, transform.position.y, flag.transform.position.z);
+				toFlag.y = 0;
+			}
+
+			if (toFlag.sqrMagnitude <= Mathf.Pow(navigator.stoppingDistance, 2))
+			{
+				transform.position = new Vector3(flag.transform.position.x, transform.position.y, flag.transform.position.z);
 				if (seekSpecialTarget)
 				{
 					flag.transform.position = specialTarget;

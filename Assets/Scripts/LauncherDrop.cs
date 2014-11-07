@@ -10,8 +10,9 @@ public class LauncherDrop : MouseDirectee {
 	{
 		if (flagFollower != null && flagFollower.flag != null)
 		{
-			flagFollower.flag.transform.position = transform.position + turnOffset;
+			//Debug.Log(transform.InverseTransformPoint(turnOffset));
+			flagFollower.flag.transform.position = transform.position + transform.TransformDirection(turnOffset);
 		}
-		flagFollower.AddSpecialTarget(transform.position + stopOffset);
+		flagFollower.AddSpecialTarget(transform.position + transform.TransformDirection(stopOffset));
 	}
 }

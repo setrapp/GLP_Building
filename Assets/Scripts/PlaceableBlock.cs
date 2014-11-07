@@ -29,39 +29,6 @@ public class PlaceableBlock : MonoBehaviour {
 	void Update()
 	{
 		renderer.enabled = isVisible;
-
-		if (!isStatic)
-		{
-			// Find nearest placeable spot
-			float minSqrDist = Mathf.Infinity;
-			PlaceableBlock nearSpot = null;
-			for (int i = 0; i < placeableSpots.Count; i++)
-			{
-				float sqrDist = (transform.position - placeableSpots[i].transform.position).sqrMagnitude;
-				if (sqrDist < minSqrDist && placeableSpots[i].attachedWall != null)
-				{
-					minSqrDist = sqrDist;
-					nearSpot = placeableSpots[i];
-				}
-			}
-
-			// Place in nearest spot if possible.
-			if (minSqrDist <= Mathf.Pow(placeRange, 2))
-			{
-				carried = false;
-				isStatic = false;
-				transform.parent = null;
-				transform.position = nearSpot.transform.position;
-				transform.rotation = nearSpot.transform.rotation;
-				nearSpot.UsePath();
-			}
-		}
-
-		if (!isStatic && falling)
-		{
-			fallSpeed = Mathf.Max(fallSpeed + fallAcceleration * Time.deltaTime, maxFallSpeed);
-			transform.position -= new Vector3(0, fallSpeed * Time.deltaTime, 0);
-		}
 	}
 
 	private void OnMouseUp()
@@ -82,6 +49,8 @@ public class PlaceableBlock : MonoBehaviour {
 
 		carriedBy = null;
 		transform.parent = null;
+		rigidbody.useGravity = true;
+		rigidbody.velocity = rigidbody.angularVelocity = new Vector3();
 		falling = true;
 	}
 
@@ -125,30 +94,34 @@ public class PlaceableBlock : MonoBehaviour {
 			}
 		}
 
-		CheckFallCollsion(collision);
+		
 	}
 
-	private void OnCollisionStay(Collision collision)
+	private void OnTriggerEnter(Collider other)
 	{
-		CheckFallCollsion(collision);
+		CheckFallCollsion(other);
 	}
 
-	private void CheckFallCollsion(Collision collision)
+	private void OnTriggerStay(Collider other)
+	{
+		CheckFallCollsion(other);
+	}
+
+	private void CheckFallCollsion(Collider other)
 	{
 		if (falling)
 		{
-			if (collision.collider.gameObject.layer == LayerMask.NameToLayer(groundLayer))
+			if (other.gameObject.layer == LayerMask.NameToLayer(groundLayer))
 			{
 				falling = false;
-				float penetration = Mathf.Abs(transform.localScale.y - (transform.position.y - collision.collider.transform.position.y));
+				float penetration = Mathf.Abs(transform.localScale.y - (transform.position.y - other.transform.position.y));
 				transform.position += new Vector3(0, penetration, 0);
 			}
-			else if (collision.collider.gameObject.layer == LayerMask.NameToLayer(gapLayer))
+			else if (other.gameObject.layer == LayerMask.NameToLayer(gapLayer))
 			{
-				BlockGap blockGap = collision.collider.GetComponent<BlockGap>();
+				BlockGap blockGap = other.GetComponent<BlockGap>();
 				if (blockGap != null && CanFillGap(blockGap))
 				{
-					Debug.Log(collision.collider.transform.name);
 					FillGap(blockGap);
 				}
 			}
@@ -157,7 +130,6 @@ public class PlaceableBlock : MonoBehaviour {
 
 	public bool CanFillGap(BlockGap gap)
 	{
-		Debug.Log(gap + " " + gap.attachedGap);
 		if (gap == null || gap.attachedGap == null)
 		{
 			return true;
@@ -174,6 +146,10 @@ public class PlaceableBlock : MonoBehaviour {
 		falling = false;
 		transform.position = gap.transform.position;
 		transform.rotation = gap.transform.rotation;
+		rigidbody.useGravity = false;
+		rigidbody.velocity = new Vector3();
+		rigidbody.angularVelocity = new Vector3();
+		Destroy(GetComponent<FixedJoint>());
 
 		gap.filled = true;
 		if (gap.attachedWall != null)
