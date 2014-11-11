@@ -18,6 +18,8 @@ public class PlaceableBlock : MonoBehaviour {
 	public string groundLayer = "Ground";
 	public string gapLayer = "Block Gap";
 	private FixedJoint joint;
+	[HideInInspector]
+	public bool preparedForCarry = false;
 
 	public enum BlockType
 	{
@@ -28,7 +30,34 @@ public class PlaceableBlock : MonoBehaviour {
 
 	void Update()
 	{
-		renderer.enabled = isVisible;
+		// Stop body from moving too much when being carried.
+		if (carriedBy != null)
+		{
+			rigidbody.velocity = new Vector3();
+			rigidbody.angularVelocity = new Vector3();
+		}
+
+		// Check for block connecting.
+		if (carriedBy != null)
+		{
+			RaycastHit hitInfo;
+			if (Physics.Raycast(transform.position, Vector3.down, out hitInfo, carriedBy.transform.localScale.y, (int)Mathf.Pow(2, gameObject.layer)))
+			{
+				//Debug.Log(gameObject.layer + " " + hitInfo.collider.gameObject.layer);
+				PlaceableBlock hitBlock = hitInfo.collider.GetComponent<PlaceableBlock>();
+				if (hitBlock != null)
+				{
+					if (blockType == BlockType.ONSET && hitBlock.blockType == BlockType.RIME)
+					{
+						ConnectOnsetRime(this, hitBlock);
+					}
+					else if (blockType == BlockType.RIME && hitBlock.blockType == BlockType.ONSET)
+					{
+						ConnectOnsetRime(hitBlock, this);
+					}
+				}
+			}
+		}
 	}
 
 	private void OnMouseUp()
@@ -77,31 +106,10 @@ public class PlaceableBlock : MonoBehaviour {
 				transform.localPosition = potentialCarrier.carryOffset + blockCarrier.carryOffset;
 				potentialCarrier.carriedBlock = this;
 				carriedBy = potentialCarrier;
-				if (joint == null)
-				{
-					joint = gameObject.AddComponent<FixedJoint>();
-				}
-				joint.connectedBody = potentialCarrier.rigidbody;
-				
-			}
-			else
-			{
-				PlaceableBlock hitBlock =collision.collider.GetComponent<PlaceableBlock>();
-				if (hitBlock != null)
-				{
-					if (blockType == BlockType.ONSET && hitBlock.blockType == BlockType.RIME)
-					{
-						ConnectOnsetRime(this ,hitBlock);
-					}
-					else if (blockType == BlockType.RIME && hitBlock.blockType == BlockType.ONSET)
-					{
-						ConnectOnsetRime(hitBlock, this);
-					}
-				}
+				ConnectJoint();
+				//preparedForCarry = true;
 			}
 		}
-
-		
 	}
 
 	private void OnTriggerEnter(Collider other)
@@ -182,9 +190,49 @@ public class PlaceableBlock : MonoBehaviour {
 		}
 		rime.transform.parent = onset.transform;
 		rime.transform.localRotation = Quaternion.identity;
-		rime.transform.localPosition = new Vector3(0, 0, 1);
+		//rime.transform.localPosition = new Vector3(0, 0, 1);
 		BlockCarrier onsetCarrier = onset.GetComponent<BlockCarrier>();
 		rime.carriedBy = onsetCarrier;
 		onsetCarrier.carriedBlock = rime;
+
+		//onset.transform.localPosition = onset.carriedBy.carryOffset + onset.blockCarrier.carryOffset;
+		//onset.preparedForCarry = true;
+		//rime.transform.localPosition = rime.carriedBy.carryOffset + rime.blockCarrier.carryOffset;
+		//rime.preparedForCarry = true;
+		onset.ConnectJoint();
+		rime.ConnectJoint();
+	}
+
+	public void PrepareToBeCarried(BlockCarrier potentialCarrier)
+	{
+		transform.parent = potentialCarrier.transform;
+		transform.localRotation = Quaternion.identity;
+		transform.localPosition = potentialCarrier.carryOffset + blockCarrier.carryOffset;
+		potentialCarrier.carriedBlock = this;
+		carriedBy = potentialCarrier;
+		preparedForCarry = true;
+	}
+
+	public void ConnectJoint()
+	{
+		if (carriedBy != null)
+		{
+			if (transform.parent != carriedBy.transform)
+			{
+				transform.parent = carriedBy.transform;
+			}
+			transform.localPosition = carriedBy.carryOffset + blockCarrier.carryOffset;
+			Debug.Log(transform.localPosition);
+			if (joint == null)
+			{
+				joint = gameObject.AddComponent<FixedJoint>();
+			}
+			joint.connectedBody = carriedBy.rigidbody;
+			
+			rigidbody.useGravity = false;
+			rigidbody.velocity = new Vector3();
+			rigidbody.angularVelocity = new Vector3();
+		}
+		
 	}
 }
