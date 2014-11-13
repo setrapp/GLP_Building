@@ -38,7 +38,7 @@ public class PlaceableBlock : MonoBehaviour {
 		}
 
 		// Check for block connecting.
-		if (carriedBy != null)
+		/*if (carriedBy != null)
 		{
 			RaycastHit hitInfo;
 			if (Physics.Raycast(transform.position, Vector3.down, out hitInfo, carriedBy.transform.localScale.y, (int)Mathf.Pow(2, gameObject.layer)))
@@ -57,7 +57,7 @@ public class PlaceableBlock : MonoBehaviour {
 					}
 				}
 			}
-		}
+		}*/
 	}
 
 	private void OnMouseUp()
@@ -124,6 +124,8 @@ public class PlaceableBlock : MonoBehaviour {
 
 	private void CheckFallCollsion(Collider other)
 	{
+		// TODO Say the text on the block when set in and when a whole gap group (onset and rime) is filled.
+
 		if (falling)
 		{
 			if (other.gameObject.layer == LayerMask.NameToLayer(groundLayer))
@@ -222,7 +224,7 @@ public class PlaceableBlock : MonoBehaviour {
 				transform.parent = carriedBy.transform;
 			}
 			transform.localPosition = carriedBy.carryOffset + blockCarrier.carryOffset;
-			Debug.Log(transform.localPosition);
+			
 			if (joint == null)
 			{
 				joint = gameObject.AddComponent<FixedJoint>();
