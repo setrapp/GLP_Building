@@ -3,8 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class PlaceableBlock : MonoBehaviour {
-	public bool isStatic = false;
-	public bool isVisible = false;
 	public GameObject attachedWall;
 	public List<PlaceableBlock> placeableSpots;
 	public float placeRange;
@@ -20,13 +18,6 @@ public class PlaceableBlock : MonoBehaviour {
 	private FixedJoint joint;
 	[HideInInspector]
 	public bool preparedForCarry = false;
-
-	public enum BlockType
-	{
-		EMPTY = 0,
-		ONSET,
-		RIME
-	}
 
 	void Update()
 	{
@@ -74,6 +65,7 @@ public class PlaceableBlock : MonoBehaviour {
 			{
 				carrierBlock.carriedBlock = null;
 			}
+			transform.localPosition = carriedBy.dropOffset + blockCarrier.dropOffset;
 		}
 
 		carriedBy = null;
@@ -96,19 +88,21 @@ public class PlaceableBlock : MonoBehaviour {
 
 	private void OnCollisionEnter(Collision collision)
 	{
-		if (!isStatic)
+		BlockCarrier potentialCarrier = collision.collider.GetComponent<BlockCarrier>();
+		if (carriedBy == null && potentialCarrier != null)
 		{
-			BlockCarrier potentialCarrier = collision.collider.GetComponent<BlockCarrier>();
-			if (carriedBy == null && potentialCarrier != null && potentialCarrier.carriedBlock == null)
+			// Tell carrier to drop current block
+			if (potentialCarrier.carriedBlock != null)
 			{
-				transform.parent = collision.collider.gameObject.transform;
-				transform.localRotation = Quaternion.identity;
-				transform.localPosition = potentialCarrier.carryOffset + blockCarrier.carryOffset;
-				potentialCarrier.carriedBlock = this;
-				carriedBy = potentialCarrier;
-				ConnectJoint();
-				//preparedForCarry = true;
+				potentialCarrier.carriedBlock.transform.rotation = this.transform.rotation;
+				potentialCarrier.carriedBlock.Drop();
 			}
+			transform.parent = collision.collider.gameObject.transform;
+			transform.localRotation = Quaternion.identity;
+			transform.localPosition = potentialCarrier.carryOffset + blockCarrier.carryOffset;
+			potentialCarrier.carriedBlock = this;
+			carriedBy = potentialCarrier;
+			ConnectJoint();
 		}
 	}
 
@@ -147,6 +141,11 @@ public class PlaceableBlock : MonoBehaviour {
 
 	public bool CanFillGap(BlockGap gap)
 	{
+		if (blockType != gap.blockType)
+		{
+			return false;
+		}
+
 		if (gap == null || gap.attachedGap == null)
 		{
 			return true;
@@ -237,4 +236,11 @@ public class PlaceableBlock : MonoBehaviour {
 		}
 		
 	}
+}
+
+public enum BlockType
+{
+	EMPTY = 0,
+	ONSET,
+	RIME
 }

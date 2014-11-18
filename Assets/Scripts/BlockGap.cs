@@ -9,6 +9,7 @@ public class BlockGap : MonoBehaviour {
 	public bool filled;
 	public GameObject attachedWall;
 	public BlockGap attachedGap;
+	public BlockType blockType;
 
 
 	/*public bool isStatic = false;
