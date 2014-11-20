@@ -3,12 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 
 public class PlaceableBlock : MonoBehaviour {
-	public bool isStatic = false;
-	public bool isVisible = false;
 	public GameObject attachedWall;
 	public List<PlaceableBlock> placeableSpots;
 	public float placeRange;
-	public bool carried;
 	public BlockType blockType;
 	public BlockCarrier blockCarrier;
 	public BlockCarrier carriedBy;
@@ -18,50 +15,40 @@ public class PlaceableBlock : MonoBehaviour {
 	private bool falling = false;
 	public string groundLayer = "Ground";
 	public string gapLayer = "Block Gap";
-
-	public enum BlockType
-	{
-		EMPTY = 0,
-		ONSET,
-		RIME
-	}
+	private FixedJoint joint;
+	[HideInInspector]
+	public bool preparedForCarry = false;
 
 	void Update()
 	{
-		renderer.enabled = isVisible;
-
-		if (!isStatic)
+		// Stop body from moving too much when being carried.
+		if (carriedBy != null)
 		{
-			// Find nearest placeable spot
-			float minSqrDist = Mathf.Infinity;
-			PlaceableBlock nearSpot = null;
-			for (int i = 0; i < placeableSpots.Count; i++)
+			rigidbody.velocity = new Vector3();
+			rigidbody.angularVelocity = new Vector3();
+		}
+
+		// Check for block connecting.
+		/*if (carriedBy != null)
+		{
+			RaycastHit hitInfo;
+			if (Physics.Raycast(transform.position, Vector3.down, out hitInfo, carriedBy.transform.localScale.y, (int)Mathf.Pow(2, gameObject.layer)))
 			{
-				float sqrDist = (transform.position - placeableSpots[i].transform.position).sqrMagnitude;
-				if (sqrDist < minSqrDist && placeableSpots[i].attachedWall != null)
+				//Debug.Log(gameObject.layer + " " + hitInfo.collider.gameObject.layer);
+				PlaceableBlock hitBlock = hitInfo.collider.GetComponent<PlaceableBlock>();
+				if (hitBlock != null)
 				{
-					minSqrDist = sqrDist;
-					nearSpot = placeableSpots[i];
+					if (blockType == BlockType.ONSET && hitBlock.blockType == BlockType.RIME)
+					{
+						ConnectOnsetRime(this, hitBlock);
+					}
+					else if (blockType == BlockType.RIME && hitBlock.blockType == BlockType.ONSET)
+					{
+						ConnectOnsetRime(hitBlock, this);
+					}
 				}
 			}
-
-			// Place in nearest spot if possible.
-			if (minSqrDist <= Mathf.Pow(placeRange, 2))
-			{
-				carried = false;
-				isStatic = false;
-				transform.parent = null;
-				transform.position = nearSpot.transform.position;
-				transform.rotation = nearSpot.transform.rotation;
-				nearSpot.UsePath();
-			}
-		}
-
-		if (!isStatic && falling)
-		{
-			fallSpeed = Mathf.Max(fallSpeed + fallAcceleration * Time.deltaTime, maxFallSpeed);
-			transform.position -= new Vector3(0, fallSpeed * Time.deltaTime, 0);
-		}
+		}*/
 	}
 
 	private void OnMouseUp()
@@ -78,11 +65,16 @@ public class PlaceableBlock : MonoBehaviour {
 			{
 				carrierBlock.carriedBlock = null;
 			}
+			transform.localPosition = carriedBy.dropOffset + blockCarrier.dropOffset;
 		}
 
 		carriedBy = null;
 		transform.parent = null;
+		rigidbody.useGravity = true;
+		rigidbody.velocity = rigidbody.angularVelocity = new Vector3();
 		falling = true;
+		Destroy(joint);
+		joint = null;
 	}
 
 	private void UsePath()
@@ -96,46 +88,49 @@ public class PlaceableBlock : MonoBehaviour {
 
 	private void OnCollisionEnter(Collision collision)
 	{
-		if (!isStatic)
+		BlockCarrier potentialCarrier = collision.collider.GetComponent<BlockCarrier>();
+		if (carriedBy == null && potentialCarrier != null)
 		{
-			BlockCarrier potentialCarrier = collision.collider.GetComponent<BlockCarrier>();
-			if (carriedBy == null && potentialCarrier != null && potentialCarrier.carriedBlock == null)
+			// Tell carrier to drop current block
+			if (potentialCarrier.carriedBlock != null)
 			{
-				carried = true;
-				transform.parent = collision.collider.gameObject.transform;
-				transform.localRotation = Quaternion.identity;
-				transform.localPosition += potentialCarrier.carryOffset;
-				potentialCarrier.carriedBlock = this;
-				carriedBy = potentialCarrier;
+				potentialCarrier.carriedBlock.transform.rotation = this.transform.rotation;
+				potentialCarrier.carriedBlock.Drop();
 			}
-			else
-			{
-				PlaceableBlock hitBlock =collision.collider.GetComponent<PlaceableBlock>();
-				if (hitBlock != null)
-				{
-					if (blockType == BlockType.ONSET && hitBlock.blockType == BlockType.RIME)
-					{
-						ConnectOnsetRime(this ,hitBlock);
-					}
-					else if (blockType == BlockType.RIME && hitBlock.blockType == BlockType.ONSET)
-					{
-						ConnectOnsetRime(hitBlock, this);
-					}
-				}
-			}
+			transform.parent = collision.collider.gameObject.transform;
+			transform.localRotation = Quaternion.identity;
+			transform.localPosition = potentialCarrier.carryOffset + blockCarrier.carryOffset;
+			potentialCarrier.carriedBlock = this;
+			carriedBy = potentialCarrier;
+			ConnectJoint();
 		}
+	}
+
+	private void OnTriggerEnter(Collider other)
+	{
+		CheckFallCollsion(other);
+	}
+
+	private void OnTriggerStay(Collider other)
+	{
+		CheckFallCollsion(other);
+	}
+
+	private void CheckFallCollsion(Collider other)
+	{
+		// TODO Say the text on the block when set in and when a whole gap group (onset and rime) is filled.
 
 		if (falling)
 		{
-			if (collision.collider.gameObject.layer == LayerMask.NameToLayer(groundLayer))
+			if (other.gameObject.layer == LayerMask.NameToLayer(groundLayer))
 			{
 				falling = false;
-				float penetration = Mathf.Abs(transform.localScale.y - (transform.position.y - collision.collider.transform.position.y));
+				float penetration = Mathf.Abs(transform.localScale.y - (transform.position.y - other.transform.position.y));
 				transform.position += new Vector3(0, penetration, 0);
 			}
-			else if (collision.collider.gameObject.layer == LayerMask.NameToLayer(gapLayer))
+			else if (other.gameObject.layer == LayerMask.NameToLayer(gapLayer))
 			{
-				BlockGap blockGap = collision.collider.GetComponent<BlockGap>();
+				BlockGap blockGap = other.GetComponent<BlockGap>();
 				if (blockGap != null && CanFillGap(blockGap))
 				{
 					FillGap(blockGap);
@@ -146,6 +141,11 @@ public class PlaceableBlock : MonoBehaviour {
 
 	public bool CanFillGap(BlockGap gap)
 	{
+		if (blockType != gap.blockType)
+		{
+			return false;
+		}
+
 		if (gap == null || gap.attachedGap == null)
 		{
 			return true;
@@ -162,6 +162,10 @@ public class PlaceableBlock : MonoBehaviour {
 		falling = false;
 		transform.position = gap.transform.position;
 		transform.rotation = gap.transform.rotation;
+		rigidbody.useGravity = false;
+		rigidbody.velocity = new Vector3();
+		rigidbody.angularVelocity = new Vector3();
+		Destroy(GetComponent<FixedJoint>());
 
 		gap.filled = true;
 		if (gap.attachedWall != null)
@@ -187,9 +191,56 @@ public class PlaceableBlock : MonoBehaviour {
 		}
 		rime.transform.parent = onset.transform;
 		rime.transform.localRotation = Quaternion.identity;
-		rime.transform.localPosition = new Vector3(0, 0, 1);
+		//rime.transform.localPosition = new Vector3(0, 0, 1);
 		BlockCarrier onsetCarrier = onset.GetComponent<BlockCarrier>();
 		rime.carriedBy = onsetCarrier;
 		onsetCarrier.carriedBlock = rime;
+
+		//onset.transform.localPosition = onset.carriedBy.carryOffset + onset.blockCarrier.carryOffset;
+		//onset.preparedForCarry = true;
+		//rime.transform.localPosition = rime.carriedBy.carryOffset + rime.blockCarrier.carryOffset;
+		//rime.preparedForCarry = true;
+		onset.ConnectJoint();
+		rime.ConnectJoint();
 	}
+
+	public void PrepareToBeCarried(BlockCarrier potentialCarrier)
+	{
+		transform.parent = potentialCarrier.transform;
+		transform.localRotation = Quaternion.identity;
+		transform.localPosition = potentialCarrier.carryOffset + blockCarrier.carryOffset;
+		potentialCarrier.carriedBlock = this;
+		carriedBy = potentialCarrier;
+		preparedForCarry = true;
+	}
+
+	public void ConnectJoint()
+	{
+		if (carriedBy != null)
+		{
+			if (transform.parent != carriedBy.transform)
+			{
+				transform.parent = carriedBy.transform;
+			}
+			transform.localPosition = carriedBy.carryOffset + blockCarrier.carryOffset;
+			
+			if (joint == null)
+			{
+				joint = gameObject.AddComponent<FixedJoint>();
+			}
+			joint.connectedBody = carriedBy.rigidbody;
+			
+			rigidbody.useGravity = false;
+			rigidbody.velocity = new Vector3();
+			rigidbody.angularVelocity = new Vector3();
+		}
+		
+	}
+}
+
+public enum BlockType
+{
+	EMPTY = 0,
+	ONSET,
+	RIME
 }

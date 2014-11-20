@@ -3,10 +3,13 @@ using System.Collections;
 
 public class DragFollower : MouseDirectee {
 	public GameObject flagPrefab;
-	private GameObject flag;
-	private bool moveToFlag = false;
+	[HideInInspector]
+	public GameObject flag;
+	public bool moveToFlag = false;
 	private bool destinationSet = false;
 	public NavMeshAgent navigator = null;
+	private bool seekSpecialTarget = false;
+	private Vector3 specialTarget;
 
 	void Awake()
 	{
@@ -22,19 +25,40 @@ public class DragFollower : MouseDirectee {
 	{
 		if (moveToFlag && flag != null)
 		{
-			if (!destinationSet && navigator != null)
+			if (!destinationSet && navigator != null && navigator.enabled)
 			{
 				navigator.SetDestination(flag.transform.position);
 				destinationSet = true;
 			}
 
-			if ((flag.transform.position - transform.position).sqrMagnitude <= Mathf.Pow(navigator.stoppingDistance, 2))
+			Vector3 toFlag = flag.transform.position - transform.position;
+			if (toFlag.y < navigator.height / 2)
 			{
-				Destroy(flag);
-				flag = null;
+				toFlag.y = 0;
+			}
+
+			if (toFlag.sqrMagnitude <= Mathf.Pow(navigator.stoppingDistance, 2))
+			{
+				transform.position = new Vector3(flag.transform.position.x, transform.position.y, flag.transform.position.z);
+				if (seekSpecialTarget)
+				{
+					flag.transform.position = specialTarget;
+					seekSpecialTarget = false;
+					transform.LookAt(specialTarget, Vector3.up);
+					navigator.velocity = new Vector3();
+					destinationSet = false;
+					ToggleObstacleAvoidance(false);
+				}
+				else
+				{
+					Destroy(flag);
+					flag = null;
+					moveToFlag = false;
+					ToggleObstacleAvoidance(true);
+				}
 			}
 		}
-		else
+		else if (navigator.enabled)
 		{
 			navigator.Stop();
 		}
@@ -49,6 +73,7 @@ public class DragFollower : MouseDirectee {
 		{
 			flagDirectee.enabled = false;
 		}
+		ToggleObstacleAvoidance(true);
 	}
 
 	protected override void MouseDown()
@@ -72,5 +97,27 @@ public class DragFollower : MouseDirectee {
 		// Tell mouse pointer to target the flag instead of this.
 		MousePointer.Instance.TargetObject(flag);
 		moveToFlag = false;
+		seekSpecialTarget = false;
 	}
+
+	public void AddSpecialTarget(Vector3 target)
+	{
+		specialTarget = target;
+		seekSpecialTarget = true;
+	}
+
+    private void ToggleObstacleAvoidance(bool avoid)
+    {
+		if (navigator.enabled)
+		{
+			if (avoid)
+			{
+				navigator.obstacleAvoidanceType = ObstacleAvoidanceType.HighQualityObstacleAvoidance;
+			}
+			else
+			{
+				navigator.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
+			}
+		}
+    }
 }
