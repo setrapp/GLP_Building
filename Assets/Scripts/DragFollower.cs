@@ -116,8 +116,8 @@ public class DragFollower : MouseDirectee {
 		seekSpecialTarget = true;
 	}
 
-    private void ToggleObstacleAvoidance(bool avoid)
-    {
+	private void ToggleObstacleAvoidance(bool avoid)
+	{
 		if (navigator.enabled)
 		{
 			if (avoid)
@@ -129,5 +129,5 @@ public class DragFollower : MouseDirectee {
 				navigator.obstacleAvoidanceType = ObstacleAvoidanceType.NoObstacleAvoidance;
 			}
 		}
-    }
+	}
 }
