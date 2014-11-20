@@ -58,9 +58,19 @@ public class DragFollower : MouseDirectee {
 				}
 			}
 		}
-		else if (navigator.enabled)
+		else 
+		{
+			StopSeeking();
+		}
+	}
+
+	private void StopSeeking()
+	{
+		if (navigator != null && navigator.enabled)
 		{
 			navigator.Stop();
+			navigator.velocity = Vector3.zero;
+			
 		}
 	}
 

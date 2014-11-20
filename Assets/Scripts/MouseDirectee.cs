@@ -5,21 +5,23 @@ public class MouseDirectee : MonoBehaviour {
 	public bool draggable = true;
 	public bool colorChangeable = true;
 	public Color highlightColor = Color.yellow;
-	private Color defaultColor;
+	public Color defaultColor;
+	public MeshRenderer colorRenderer;
 
 	protected virtual void Awake()
 	{
-		if (colorChangeable)
+		if (colorRenderer == null)
 		{
-			defaultColor = renderer.material.color;
+			colorRenderer = GetComponent<MeshRenderer>();
 		}
+		defaultColor = colorRenderer.material.color;
 	}
 
 	protected virtual void MouseOver()
 	{
 		if (colorChangeable)
 		{
-			renderer.material.color = highlightColor;
+			colorRenderer.material.color = highlightColor;
 		}
 	}
 
@@ -49,7 +51,7 @@ public class MouseDirectee : MonoBehaviour {
 	{
 		if (colorChangeable)
 		{
-			renderer.material.color = defaultColor;
+			colorRenderer.material.color = defaultColor;
 		}
 	}
 

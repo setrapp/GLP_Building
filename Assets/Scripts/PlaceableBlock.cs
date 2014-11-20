@@ -18,6 +18,15 @@ public class PlaceableBlock : MonoBehaviour {
 	private FixedJoint joint;
 	[HideInInspector]
 	public bool preparedForCarry = false;
+	public MouseDirectee highlighter;
+
+	void Start()
+	{
+		if (highlighter == null)
+		{
+			highlighter = GetComponent<MouseDirectee>();
+		}
+	}
 
 	void Update()
 	{
@@ -26,29 +35,10 @@ public class PlaceableBlock : MonoBehaviour {
 		{
 			rigidbody.velocity = new Vector3();
 			rigidbody.angularVelocity = new Vector3();
-		}
 
-		// Check for block connecting.
-		/*if (carriedBy != null)
-		{
-			RaycastHit hitInfo;
-			if (Physics.Raycast(transform.position, Vector3.down, out hitInfo, carriedBy.transform.localScale.y, (int)Mathf.Pow(2, gameObject.layer)))
-			{
-				//Debug.Log(gameObject.layer + " " + hitInfo.collider.gameObject.layer);
-				PlaceableBlock hitBlock = hitInfo.collider.GetComponent<PlaceableBlock>();
-				if (hitBlock != null)
-				{
-					if (blockType == BlockType.ONSET && hitBlock.blockType == BlockType.RIME)
-					{
-						ConnectOnsetRime(this, hitBlock);
-					}
-					else if (blockType == BlockType.RIME && hitBlock.blockType == BlockType.ONSET)
-					{
-						ConnectOnsetRime(hitBlock, this);
-					}
-				}
-			}
-		}*/
+			transform.rotation = carriedBy.transform.rotation;
+			transform.position = carriedBy.transform.position + carriedBy.transform.TransformDirection(carriedBy.carryOffset + blockCarrier.carryOffset);
+		}
 	}
 
 	private void OnMouseUp()
@@ -65,16 +55,17 @@ public class PlaceableBlock : MonoBehaviour {
 			{
 				carrierBlock.carriedBlock = null;
 			}
-			transform.localPosition = carriedBy.dropOffset + blockCarrier.dropOffset;
+			transform.position = carriedBy.transform.position + carriedBy.transform.TransformDirection(carriedBy.dropOffset + blockCarrier.dropOffset);
 		}
 
 		carriedBy = null;
-		transform.parent = null;
 		rigidbody.useGravity = true;
 		rigidbody.velocity = rigidbody.angularVelocity = new Vector3();
 		falling = true;
 		Destroy(joint);
 		joint = null;
+		SendMessage("LetGo");
+		highlighter.colorChangeable = false;
 	}
 
 	private void UsePath()
@@ -97,12 +88,13 @@ public class PlaceableBlock : MonoBehaviour {
 				potentialCarrier.carriedBlock.transform.rotation = this.transform.rotation;
 				potentialCarrier.carriedBlock.Drop();
 			}
-			transform.parent = collision.collider.gameObject.transform;
-			transform.localRotation = Quaternion.identity;
-			transform.localPosition = potentialCarrier.carryOffset + blockCarrier.carryOffset;
+			transform.rotation = potentialCarrier.transform.rotation;
+			transform.position = potentialCarrier.transform.position + potentialCarrier.transform.TransformDirection(potentialCarrier.carryOffset + blockCarrier.carryOffset);
 			potentialCarrier.carriedBlock = this;
 			carriedBy = potentialCarrier;
-			ConnectJoint();
+			highlighter.colorChangeable = true;
+			rigidbody.useGravity = false;
+			potentialCarrier.SendMessage("StopSeeking");
 		}
 	}
 
@@ -177,64 +169,6 @@ public class PlaceableBlock : MonoBehaviour {
 		{
 			blockCarrier.carriedBlock.FillGap(gap.attachedGap);
 		}
-	}
-
-	private void ConnectOnsetRime(PlaceableBlock onset, PlaceableBlock rime)
-	{
-		if (rime.carriedBy != null && onset.carriedBy == null)
-		{
-			onset.transform.parent = rime.transform.parent;
-			onset.transform.localPosition = rime.transform.localPosition;
-			onset.transform.localRotation = rime.transform.localRotation;
-			onset.carriedBy = rime.carriedBy;
-			onset.carriedBy.carriedBlock = onset;
-		}
-		rime.transform.parent = onset.transform;
-		rime.transform.localRotation = Quaternion.identity;
-		//rime.transform.localPosition = new Vector3(0, 0, 1);
-		BlockCarrier onsetCarrier = onset.GetComponent<BlockCarrier>();
-		rime.carriedBy = onsetCarrier;
-		onsetCarrier.carriedBlock = rime;
-
-		//onset.transform.localPosition = onset.carriedBy.carryOffset + onset.blockCarrier.carryOffset;
-		//onset.preparedForCarry = true;
-		//rime.transform.localPosition = rime.carriedBy.carryOffset + rime.blockCarrier.carryOffset;
-		//rime.preparedForCarry = true;
-		onset.ConnectJoint();
-		rime.ConnectJoint();
-	}
-
-	public void PrepareToBeCarried(BlockCarrier potentialCarrier)
-	{
-		transform.parent = potentialCarrier.transform;
-		transform.localRotation = Quaternion.identity;
-		transform.localPosition = potentialCarrier.carryOffset + blockCarrier.carryOffset;
-		potentialCarrier.carriedBlock = this;
-		carriedBy = potentialCarrier;
-		preparedForCarry = true;
-	}
-
-	public void ConnectJoint()
-	{
-		if (carriedBy != null)
-		{
-			if (transform.parent != carriedBy.transform)
-			{
-				transform.parent = carriedBy.transform;
-			}
-			transform.localPosition = carriedBy.carryOffset + blockCarrier.carryOffset;
-			
-			if (joint == null)
-			{
-				joint = gameObject.AddComponent<FixedJoint>();
-			}
-			joint.connectedBody = carriedBy.rigidbody;
-			
-			rigidbody.useGravity = false;
-			rigidbody.velocity = new Vector3();
-			rigidbody.angularVelocity = new Vector3();
-		}
-		
 	}
 }
 
