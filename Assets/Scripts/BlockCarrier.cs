@@ -6,4 +6,12 @@ public class BlockCarrier : MonoBehaviour {
 	public PlaceableBlock carriedBlock = null;
 	public Vector3 carryOffset = Vector3.zero;
 	public Vector3 dropOffset = Vector3.zero;
+
+	public void DropBlock()
+	{
+		if (carriedBlock != null)
+		{
+			carriedBlock.Drop();
+		}
+	}
 }

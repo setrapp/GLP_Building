@@ -94,7 +94,7 @@ public class PlaceableBlock : MonoBehaviour {
 			carriedBy = potentialCarrier;
 			highlighter.colorChangeable = true;
 			rigidbody.useGravity = false;
-			potentialCarrier.SendMessage("StopSeeking");
+			potentialCarrier.SendMessage("StopSeeking", SendMessageOptions.DontRequireReceiver);
 		}
 	}
 
