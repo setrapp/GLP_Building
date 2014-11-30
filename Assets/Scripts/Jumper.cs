@@ -6,6 +6,7 @@ public class Jumper : MonoBehaviour {
 	public LayerMask groundLayer;
 	private bool jumped;
 	private Vector3 navigatorDestination;
+	private bool navigateUponLanding;
 
 	public void Jump()
 	{
@@ -18,17 +19,27 @@ public class Jumper : MonoBehaviour {
 		}
 		rigidbody.useGravity = true;
 		jumped = true;
+		navigateUponLanding = true;
+	}
+
+	public void JumpAndStop()
+	{
+		Jump();
+		navigateUponLanding = false;
 	}
 
 	public void OnCollisionEnter(Collision collision)
 	{
 		if (jumped && Mathf.Pow(2, collision.collider.gameObject.layer) == groundLayer)
 		{
-			NavMeshAgent navigator = GetComponent<NavMeshAgent>();
-			if (navigator)
+			if (navigateUponLanding)
 			{
-				navigator.enabled = true;
-				navigator.SetDestination(navigatorDestination);
+				NavMeshAgent navigator = GetComponent<NavMeshAgent>();
+				if (navigator)
+				{
+					navigator.enabled = true;
+					navigator.SetDestination(navigatorDestination);
+				}
 			}
 			rigidbody.useGravity = false;
 			jumped = false;

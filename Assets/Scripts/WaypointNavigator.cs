@@ -46,6 +46,7 @@ public class WaypointNavigator : MonoBehaviour {
 		}
 
 		SeekNextWaypoint();
+		AttemptCallback();
 		collideWithWaypoint = false;
 		if (previous >= 0 && previous < waypoints.Count)
 		{
@@ -67,11 +68,7 @@ public class WaypointNavigator : MonoBehaviour {
 			SeekNextWaypoint();
 			collideWithWaypoint = false;
 
-			// If the waypoint triggers a function, call the function.
-			if (waypoints[previous].messageCallback != null && waypoints[previous].messageCallback != "")
-			{
-				SendMessage(waypoints[previous].messageCallback, SendMessageOptions.DontRequireReceiver);
-			}
+			AttemptCallback();
 		}
 	}
 
@@ -139,6 +136,15 @@ public class WaypointNavigator : MonoBehaviour {
 			{
 				navigator.Stop();
 			}
+		}
+	}
+
+	void AttemptCallback()
+	{
+		// If the waypoint triggers a function, call the function.
+		if (waypoints[previous].messageCallback != null && waypoints[previous].messageCallback != "")
+		{
+			SendMessage(waypoints[previous].messageCallback, SendMessageOptions.DontRequireReceiver);
 		}
 	}
 
