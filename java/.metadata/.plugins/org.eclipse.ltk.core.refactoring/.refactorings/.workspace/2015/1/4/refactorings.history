@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Delete resource &apos;IGM_GLP&apos;" deleteContents="false" description="Delete resource &apos;IGM_GLP&apos;" element1="/IGM_GLP" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1421631887149"/>
+</session>

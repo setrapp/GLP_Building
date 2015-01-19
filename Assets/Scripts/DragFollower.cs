@@ -11,7 +11,7 @@ public class DragFollower : MouseDirectee {
 	private bool seekSpecialTarget = false;
 	private Vector3 specialTarget;
 
-	void Awake()
+	protected override void Awake()
 	{
 		base.Awake();
 		

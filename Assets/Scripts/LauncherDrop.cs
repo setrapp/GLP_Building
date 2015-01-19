@@ -6,7 +6,7 @@ public class LauncherDrop : MouseDirectee {
 	public Vector3 turnOffset;
 	public Vector3 stopOffset;
 
-	protected void MouseUp()
+	protected override void MouseUp()
 	{
 		if (flagFollower != null && flagFollower.flag != null)
 		{
