@@ -14,10 +14,18 @@ public class AndroidCommunication : MonoBehaviour {
 		AndroidJavaClass jc = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
 		jo = jc.GetStatic<AndroidJavaObject>("currentActivity");
 		jo.Call("UnityTest", inText.text);
+
+		jo.Call("sendLog", "myName", "sam");
+	}
+
+	void Update()
+	{
+		frams++;
+		jo.Call("UnityTest", inText.text+frams);
 	}
 
 	public void AndroidTest(string test)
 	{
-		outText.text = test;
+		outText.text = test + "f";
 	}
 }
