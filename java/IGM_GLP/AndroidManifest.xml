@@ -2,7 +2,10 @@
     package="com.ritigm.glp"
     android:versionCode="1"
     android:versionName="1.0" >
-
+    <uses-permission android:name="android.permission.BATTERY_STATS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-sdk
         android:minSdkVersion="9"
         android:targetSdkVersion="21" />
@@ -14,4 +17,17 @@
         android:theme="@style/AppTheme" >
     </application>
 
+    <application>
+        <service android:name="edu.mit.media.funf.FunfManager">
+        </service>
+        <receiver android:name="edu.mit.media.funf.Launcher" android:enabled="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BATTERY_CHANGED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.DOCK_EVENT" />
+                <action android:name="android.intent.action.ACTION_SCREEN_ON" />
+                <action android:name="android.intent.action.USER_PRESENT" />
+            </intent-filter>
+        </receiver>
+    </application>
 </manifest>

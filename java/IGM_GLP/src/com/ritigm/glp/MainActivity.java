@@ -15,7 +15,8 @@ public class MainActivity extends UnityPlayerNativeActivity {
 		UnityPlayer.UnitySendMessage("AndroidCommunicator", "AndroidTest", test);
 	}
 	
-	public void sendLog(String name, String value) {
+	public void sendLog(String name, String value)
+    {
 		Intent i = new Intent();
 		i.setAction(DatabaseService.ACTION_RECORD); // 
 		Bundle b = new Bundle();
